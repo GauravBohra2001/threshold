@@ -1,0 +1,4 @@
+# Keep secrets out of the agent's context
+.env
+.env.*
+!.env.example

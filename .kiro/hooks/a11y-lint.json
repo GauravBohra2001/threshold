@@ -1,0 +1,13 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Accessibility lint on component save",
+      "description": "Runs ESLint (including jsx-a11y rules) whenever the agent saves a TSX file.",
+      "trigger": "PostFileSave",
+      "matcher": "src/.*\\.tsx$",
+      "action": { "type": "command", "command": "npx eslint --fix" },
+      "timeout": 60
+    }
+  ]
+}
