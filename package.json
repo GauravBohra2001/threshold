@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "test": "vitest run",
+    "eval": "vitest run tests/evals/case-agent/eval.test.ts --disableConsoleIntercept",
     "smoke": "node --env-file=.env.local scripts/smoke.mjs"
   },
   "dependencies": {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useState } from "react";
-import { CircleCheck, Info, TriangleAlert } from "lucide-react";
+import { CircleCheck, ImageOff, Info, TriangleAlert } from "lucide-react";
 
 import LiveRegion from "@/components/LiveRegion";
 import PhotoCapture from "@/components/PhotoCapture";
@@ -28,7 +28,8 @@ interface VaultListItem {
   ai_description: string;
   accessibility_relevant: boolean;
   captured_at: string;
-  signed_url: string;
+  /** Signed photo URL, or null when the photo could not be signed. */
+  image_url: string | null;
   alt: string;
 }
 
@@ -282,13 +283,29 @@ export default function VaultPage() {
                   key={item.id}
                   className="overflow-hidden rounded-[18px] border border-line bg-surface"
                 >
-                  {/* Short-lived signed URL (≤300s, Req 3.8); not a stable asset. */}
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
-                    src={item.signed_url}
-                    alt={item.alt}
-                    className="aspect-square w-full rounded-[12px] object-cover"
-                  />
+                  {item.image_url ? (
+                    <>
+                      {/* Short-lived signed URL (≤300s, Req 3.8); not a stable asset. */}
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img
+                        src={item.image_url}
+                        alt={item.alt}
+                        className="aspect-square w-full rounded-[12px] object-cover"
+                      />
+                    </>
+                  ) : (
+                    // The photo file could not be signed (e.g. missing from
+                    // storage). Show a plain placeholder so the item still
+                    // lists with its label and date.
+                    <div
+                      role="img"
+                      aria-label={`${label}. Photo not available.`}
+                      className="flex aspect-square w-full flex-col items-center justify-center gap-2 rounded-[12px] bg-bg p-3 text-muted"
+                    >
+                      <ImageOff aria-hidden="true" className="h-6 w-6" />
+                      <span className="text-[16px]">Photo not available</span>
+                    </div>
+                  )}
                   <div className="p-3">
                     <p className="font-bold">{label}</p>
                     <p className="mt-1 text-[16px] text-muted">

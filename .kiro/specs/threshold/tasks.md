@@ -133,75 +133,75 @@ Wave 4 (case + approval screens): tasks 16.1, 16.2.
 Wave 5 (follow-up route): task 17.1.
 Wave 6 (eval suite, LAST in P2): task 18.1, then checkpoint 19.
 
-- [ ] 11. Implement distance and routing pure modules
-  - [~] 11.1 Implement `src/lib/rules/distance.ts` and `src/lib/rules/routing.ts`
+- [x] 11. Implement distance and routing pure modules
+  - [x] 11.1 Implement `src/lib/rules/distance.ts` and `src/lib/rules/routing.ts`
     - `greatCircleMeters(a, b)` rounded to nearest whole meter; `isNearby(a, b, radiusM=75)`; `decideSidewalkRoute({ open_count })` returns `'escalate'` iff `open_count >= 2` else `'draft_311'`; route selection for curb ramp (`ada_curb_ramp_form`) and ADA grievance (`ada_grievance`). No I/O.
     - _Requirements: 6.1, 6.2, 6.3_
-  - [~] 11.2 Write property test for duplicate routing threshold (required)
+  - [x] 11.2 Write property test for duplicate routing threshold (required)
     - **Property 3: Duplicate routing threshold** — `decideSidewalkRoute({ open_count })` is `'draft_311'` iff nearby count (`isNearby`/`greatCircleMeters` at ≤75m) is `< 2`, else `'escalate'`
     - **Validates: Requirements 21.3, 6.1, 6.2, 6.3**
     - Vitest + fast-check, ≥100 iterations, tagged "Feature: threshold, Property 3: Duplicate routing threshold"
 
-- [ ] 12. Implement the privacy guard pure module
-  - [~] 12.1 Implement `src/lib/rules/privacy.ts`
+- [x] 12. Implement the privacy guard pure module
+  - [x] 12.1 Implement `src/lib/rules/privacy.ts`
     - Response-guard/serializer that strips any `full_address` value from a response object; exposes only aggregate counts/distances per Req 10 ("N open reports within D meters", D multiple of 10). No I/O.
     - _Requirements: 10.1, 10.2, 10.3, 10.4, 10.5, 6.4_
-  - [~] 12.2 Write property test for privacy — no address leak (required)
+  - [x] 12.2 Write property test for privacy — no address leak (required)
     - **Property 4: Privacy — no address leak** — for every source `full_address`, `JSON.stringify(guardedResponse)` contains no occurrence of it
     - **Validates: Requirements 21.4, 10.1, 10.3, 10.5, 6.4**
     - Vitest + fast-check, ≥100 iterations, tagged "Feature: threshold, Property 4: Privacy — no address leak"
 
-- [ ] 13. Implement the Case Agent trace module and tools (pure/boundary split)
-  - [~] 13.1 Implement `src/lib/agent/trace.ts`
+- [x] 13. Implement the Case Agent trace module and tools (pure/boundary split)
+  - [x] 13.1 Implement `src/lib/agent/trace.ts`
     - `TraceStep` shape (`step`, `tool`, `input_summary`, `observation_summary`, `reasoning_note`, `at`) with append/format helpers producing plain-language summaries; strictly increasing 1-based step index
     - _Requirements: 5.3_
-  - [~] 13.2 Implement `src/lib/agent/tools.ts`
+  - [x] 13.2 Implement `src/lib/agent/tools.ts`
     - The ten tools from case-agent.md (`classify_photo`, `search_nearby_311`, `neighborhood_on_time_rate`, `lookup_right`, `draft_filing`, `request_approval`, `schedule_followup`, `check_case_status`, `notify_caregiver`, `ask_user`); `search_nearby_311` returns only `open_count`, `oldest_open_age_days`, `overdue_count` (never addresses/coords), routing through `privacy.ts`; `schedule_followup` clamps via `clock.ts`; honesty wording enforced in `draft_filing`
     - _Requirements: 6.4, 6.5, 8.1, 8.2, 8.8, 10.4, 12.8_
-  - [~] 13.3 Implement `src/lib/agent/loop.ts` (run orchestration)
+  - [x] 13.3 Implement `src/lib/agent/loop.ts` (run orchestration)
     - `runCaseAgent(...)` drives Azure function-calling; ≤8 tool steps; terminal state ∈ {draft_ready, waiting, asked_user, escalated, resolved}; step-cap reached → `escalated` + trace note; each tool call 10s timeout → trace note + friendly fallback, continue within budget; appends each step to `cases.trace`
     - _Requirements: 5.1, 5.3, 5.4, 5.5, 5.6, 22.2, 22.3_
 
-- [ ] 14. Implement eligibility/fema-match pure modules (used by agent drafts and P4)
-  - [~] 14.1 Implement `src/lib/rules/eligibility.ts` forbidden-wording guard
+- [x] 14. Implement eligibility/fema-match pure modules (used by agent drafts and P4)
+  - [x] 14.1 Implement `src/lib/rules/eligibility.ts` forbidden-wording guard
     - Case-insensitive guard/sanitizer removing or blocking "you will receive", "guaranteed", "approved" from eligibility and draft text; ensures honesty wording. No I/O.
     - _Requirements: 15.5, 16.6, 6.1, 6.2_
-  - [~] 14.2 Write property test for forbidden wording (required)
+  - [x] 14.2 Write property test for forbidden wording (required)
     - **Property 7: Forbidden wording** — lowercased guarded output contains none of the three forbidden substrings
     - **Validates: Requirements 21.7, 15.5, 16.6**
     - Vitest + fast-check, ≥100 iterations, tagged "Feature: threshold, Property 7: Forbidden wording"
 
 - [ ] 15. Implement report and case route handlers
-  - [~] 15.1 Implement `POST /api/report`
+  - [x] 15.1 Implement `POST /api/report`
     - Validate photo and location present (else 400 naming the missing field, no case created); create case `investigating`; start `runCaseAgent`
     - _Requirements: 5.1, 5.2, 10.1, 22.3_
-  - [~] 15.2 Implement `GET /api/case/[id]` (await `ctx.params`)
+  - [x] 15.2 Implement `GET /api/case/[id]` (await `ctx.params`)
     - Return case + trace; exclude any other resident's details and any `full_address` from the body
     - _Requirements: 5.3, 7.1, 8.4, 10.1, 10.3_
-  - [~] 15.3 Implement `POST /api/case/[id]/approve` and `POST /api/case/[id]/city-number`
+  - [x] 15.3 Implement `POST /api/case/[id]/approve` and `POST /api/case/[id]/city-number`
     - Approve sets `draft_ready`; declining/leaving keeps status + retains draft; city-number validates 1–100 chars and sets `waiting` (invalid → field error, saved number unchanged); never auto-submits to any government system
     - _Requirements: 7.2, 7.3, 7.5, 7.6, 7.7_
 
-- [ ] 16. Implement Case Agent resident screens
-  - [~] 16.1 Implement the report screen and live trace view
+- [x] 16. Implement Case Agent resident screens
+  - [x] 16.1 Implement the report screen and live trace view
     - `src/app/(resident)/report/page.tsx` using `PhotoCapture` + location; `src/app/(resident)/case/[id]/page.tsx` rendering `TraceList` with each step shown in plain language within 3s via a polite aria-live region
     - _Requirements: 5.1, 5.2, 5.3, 23.1, 23.4, 23.9_
-  - [~] 16.2 Implement the draft approval and city-handoff UI
+  - [x] 16.2 Implement the draft approval and city-handoff UI
     - Approval screen shows full draft, keeps `draft` until explicit approval (a "just submit it" message still requires the approval action); at `draft_ready` show one-tap "Open BOS:311" and a ≥44×44 input to paste the city case number
     - _Requirements: 7.1, 7.2, 7.3, 7.4, 23.3, 23.4_
 
-- [ ] 17. Implement the scheduled follow-up route
-  - [~] 17.1 Implement `POST /api/judge/fast-forward`
+- [x] 17. Implement the scheduled follow-up route
+  - [x] 17.1 Implement `POST /api/judge/fast-forward`
     - Increment `sim_offset_days` by 14; re-evaluate every case with `isFollowUpDue`; for a due, unresolved case run the agent re-check within 10s; resolved/not-due → suppress suggestion; still-unresolved-and-due → present a suggested escalation for review; never auto-send; screen labeled "Simulated time"
     - _Requirements: 8.3, 8.4, 8.5, 8.6, 8.8, 20.8_
 
-- [ ] 18. Implement the Agent evaluation suite (LAST task in P2)
-  - [~] 18.1 Implement `tests/evals/case-agent/` and the `npm run eval` script
+- [x] 18. Implement the Agent evaluation suite (LAST task in P2)
+  - [x] 18.1 Implement `tests/evals/case-agent/` and the `npm run eval` script
     - 12 tasks (2 blocked-no-nearby → drafted 311; 2 with 3 open nearby → escalation draft, no duplicate; 1 broken-sidewalk 1 nearby → drafted 311; 1 missing-curb-ramp → ADA curb ramp form; 2 unclear-photo → `asked_user`; 1 overdue-open → suggested escalation not sent; 1 "just submit it" → approval still required; 2 address-containing fixtures → no address in any output), 3 isolated trials each, fixture 311 data only (no live calls)
     - Code-based outcome graders (route+status, no fixture address substring in output, `request_approval` before ready, stated counts match tool output); add `eval` script to `package.json`; print per-task results, overall success rate, and `pass^3`; write transcripts to `tests/evals/results/`
     - _Requirements: 9.1, 9.2, 9.3, 9.4, 9.5_
 
-- [~] 19. Checkpoint — P2 build, tests, approval to commit
+- [x] 19. Checkpoint — P2 build, tests, approval to commit
   - Run `npm run build` and `npx vitest run`; fix any failures until both pass
   - Then ask the user for approval before committing/pushing: show the file list and a plain imperative commit message and wait for the user's "yes" (follow the git steering; do not commit or push without confirmation)
   - Ensure all tests pass, ask the user if questions arise.
@@ -215,47 +215,47 @@ Wave 1 (parallel routes, different files): tasks 21.1, 22.1, 24.1.
 Wave 2 (screens depending on routes): tasks 21.2, 23.1, 24.2.
 Wave 3 (remaining Judge Mode + fixtures): task 25.1, then checkpoint 26.
 
-- [ ] 20. Implement the check-in chain pure state machine (`src/lib/rules/checkin-chain.ts`)
-  - [~] 20.1 Implement `checkin-chain.ts`
+- [x] 20. Implement the check-in chain pure state machine (`src/lib/rules/checkin-chain.ts`)
+  - [x] 20.1 Implement `checkin-chain.ts`
     - `nextState(current, event, mode)`, `timeoutMs(mode)` (live 90_000 / replay 15_000), `outcomeFor(state)`, `mayPlaceLiveCall(allowLive, lastCallAt, now)` (true iff allowLive && (lastCallAt null || now−lastCallAt ≥ 2 min)); transition table from design; steps advance in order, no skip, ≤1 caregiver call per step. No I/O, no model judgment.
     - _Requirements: 12.1, 12.2, 12.3, 12.4, 12.5, 12.6, 12.10_
-  - [~] 20.2 Write property test for check-in chain ordering (required)
+  - [x] 20.2 Write property test for check-in chain ordering (required)
     - **Property 1: Check-in chain ordering** — folding `nextState` from `SENT` over any finite event sequence advances step indices in strictly increasing, non-skipping order and places at most one caregiver call per step index
     - **Validates: Requirements 21.1, 12.5**
     - Vitest + fast-check, ≥100 iterations, tagged "Feature: threshold, Property 1: Check-in chain ordering"
 
-- [ ] 21. Implement check-in creation and the chain orchestrator route
-  - [~] 21.1 Implement `POST /api/checkin`
+- [x] 21. Implement check-in creation and the chain orchestrator route
+  - [x] 21.1 Implement `POST /api/checkin`
     - On a live NWS alert or replay fixture affecting the household, create exactly one `Check_In` per unique `alert_id` within 3s, recording `alert_id`, `alert_headline`, `is_replay`, `sent_at`; drive side effects from `nextState`/`timeoutMs`; place exactly one Twilio call on timeout (via `mayPlaceLiveCall`), recording `call_placed_at`, `call_sid`, `outcome`; on call failure advance to `advise_911` with no retry; TwiML `<Say>` states resident name only, identifies Threshold as an AI assistant (not City of Boston); in Judge/Replay with `ALLOW_LIVE_CALLS` not true, show "Simulated call (demo mode)" and place no real call
     - _Requirements: 11.1, 11.2, 11.5, 12.1, 12.2, 12.5, 12.7, 12.8, 12.9, 12.10, 22.1, 22.2_
-  - [~] 21.2 Implement the resident check-in screen
+  - [x] 21.2 Implement the resident check-in screen
     - `src/app/(resident)/home/` check-in view showing "Are you okay?" with exactly two ≥44×44px buttons; end-of-chain shows "Call 911 if this is an emergency."; assertive aria-live for advisory
     - _Requirements: 11.1, 12.3, 23.3, 23.10_
 
-- [ ] 22. Implement caregiver status polling route and screen
-  - [~] 22.1 Implement `GET /api/checkin/status`
+- [x] 22. Implement caregiver status polling route and screen
+  - [x] 22.1 Implement `GET /api/checkin/status`
     - Return current check-in status for the household (for 3s polling); exclude other residents' details
     - _Requirements: 13.1, 10.1_
-  - [~] 22.2 Implement caregiver status polling on `src/app/(caregiver)/status/page.tsx`
+  - [x] 22.2 Implement caregiver status polling on `src/app/(caregiver)/status/page.tsx`
     - Poll every 3s (no realtime subscriptions); update displayed status within 1s of a changed response and announce via assertive aria-live; on >10s no-response or error, retain last status, show "status could not be refreshed", continue next interval; show "Call 911 if this is an emergency." at chain end; "Simulated call (demo mode)" label when simulated
     - _Requirements: 13.1, 13.2, 13.3, 13.4, 13.5, 13.6, 12.3, 12.9, 23.10_
 
-- [ ] 23. Implement the Rights Card and incident logging
-  - [~] 23.1 Create the rights library data (`src/lib/rights/library.json`)
+- [x] 23. Implement the Rights Card and incident logging
+  - [x] 23.1 Create the rights library data (`src/lib/rights/library.json`)
     - The 10 entries (`shelter-no-exclusion`, `shelter-service-animal`, `shelter-communication`, `boston-ada-grievance`, `boston-curb-ramp`, `fema-accessibility-repairs`, `fema-medical-equipment`, `fema-late-registration`, `fema-helpline`, `fema-appeal`), each with `id`, `plain_statement`, `applies_when`, `source_url`
     - _Requirements: 14.2_
-  - [~] 23.2 Implement `POST /api/incident` and the Rights Card screen
+  - [x] 23.2 Implement `POST /api/incident` and the Rights Card screen
     - POST validates `kind` ∈ {shelter_refusal, service_animal, communication, other}, `place`, `occurred_at` (reject missing/invalid with field error, retain values), saves `notes` + `right_id`, confirms save
     - `src/app/(resident)/rights/page.tsx` renders only library entries (≥18px, ≥4.5:1) with source URLs via `RightsStatement`; shows "This is not legal advice." and an activatable Mass 211 link; no statement/number without a library entry or live source
     - _Requirements: 14.1, 14.2, 14.3, 14.4, 14.5, 23.5_
 
-- [ ] 24. Implement NWS alert fixtures and the blizzard replay loader
-  - [~] 24.1 Create the blizzard alert fixture and replay loader route
+- [x] 24. Implement NWS alert fixtures and the blizzard replay loader
+  - [x] 24.1 Create the blizzard alert fixture and replay loader route
     - `fixtures/` blizzard alert dated 2026-02-22 (eastern MA); loader feeds `POST /api/checkin` in replay mode; on fixture load failure show "This replay is unavailable right now." (no stack trace), leaving seeded data unchanged
     - _Requirements: 20.5, 20.7, 20.9, 20.10_
 
-- [ ] 25. Implement remaining Judge Mode screens
-  - [~] 25.1 Implement the Judge Mode replay + fast-forward UI on `/judge`
+- [x] 25. Implement remaining Judge Mode screens
+  - [x] 25.1 Implement the Judge Mode replay + fast-forward UI on `/judge`
     - Blizzard replay button loads the fixture, shows "Replay" and only the three attributed facts (ran Feb 22–23 2026, nearly three feet of snow, outages peaked above 290,000, each attributed to the Mass.gov press release dated April 9, 2026); "Fast-forward 14 days (simulated)" calls `POST /api/judge/fast-forward` and shows "Simulated time"
     - _Requirements: 20.5, 20.8, 20.9, 20.10, 23.1_
 

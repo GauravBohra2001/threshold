@@ -1,14 +1,16 @@
 import type { Metadata } from "next";
 
 import Badge from "@/components/ui/Badge";
+import JudgeReplayPanel from "./JudgeReplayPanel";
 import JudgeSeedPanel from "./JudgeSeedPanel";
 
 /**
  * Judge Mode entry screen (`/judge`), ui-design.md.
  *
  * Shows the "Demo data, fictional people" honesty Badge and seeds (or reuses)
- * the fictional demo household via the client panel. Replays and fast-forward
- * are later tasks (24.1 / 25.1 / 17.1).
+ * the fictional demo household via the client panel, then offers the labeled
+ * blizzard replay and the "Fast-forward 14 days (simulated)" control via the
+ * replay panel (Req 20.5, 20.8, 20.9, 20.10).
  */
 
 export const metadata: Metadata = {
@@ -28,6 +30,8 @@ export default function JudgePage() {
       </header>
 
       <JudgeSeedPanel />
+
+      <JudgeReplayPanel />
     </main>
   );
 }

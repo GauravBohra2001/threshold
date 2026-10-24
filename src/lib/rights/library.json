@@ -1,0 +1,62 @@
+[
+  {
+    "id": "shelter-no-exclusion",
+    "plain_statement": "Emergency shelter programs must not exclude people with disabilities, and generally cannot require them to go to a special-needs or medical shelter instead of a regular shelter.",
+    "applies_when": "When you are at or seeking emergency shelter.",
+    "source_url": "https://archive.ada.gov/pcatoolkit/chap7shelterprog.htm"
+  },
+  {
+    "id": "shelter-service-animal",
+    "plain_statement": "Shelters must change \"no pets\" rules so people are not separated from their service animals.",
+    "applies_when": "When you are at or seeking emergency shelter.",
+    "source_url": "https://www.ada.gov/topics/emergency-planning"
+  },
+  {
+    "id": "shelter-communication",
+    "plain_statement": "Shelters run by state or local government must communicate effectively with people who are blind, deaf, or hard of hearing.",
+    "applies_when": "When you are at or seeking emergency shelter.",
+    "source_url": "https://www.ada.gov/topics/emergency-planning"
+  },
+  {
+    "id": "boston-ada-grievance",
+    "plain_statement": "You can file an ADA grievance if the City of Boston discriminated against you because of a disability or did not give you access to meetings, services, programs, or activities. The Disabilities Commission contacts you within 30 days.",
+    "applies_when": "When the City of Boston denied access because of a disability.",
+    "source_url": "https://www.boston.gov/departments/disabilities-commission/how-file-ada-grievance-boston"
+  },
+  {
+    "id": "boston-curb-ramp",
+    "plain_statement": "Boston has an ADA Curb Ramp Request Form for corners where a curb ramp is missing or does not meet ADA rules. Contacting the Disabilities Commission can help accessibility-related 311 requests get followed up.",
+    "applies_when": "When a street corner is missing a curb ramp or it does not meet ADA rules.",
+    "source_url": "https://boston.gov/departments/youth-engagement-and-advancement/youth-guide-street-services"
+  },
+  {
+    "id": "fema-accessibility-repairs",
+    "plain_statement": "For disasters declared on or after March 22, 2024, FEMA can pay for accessibility items such as ramps, grab bars, and paved pathways for a disaster-damaged home, even if they were not there before, and this does not count against the housing assistance maximum. You may be eligible; FEMA decides.",
+    "applies_when": "After a federally declared disaster affecting your area.",
+    "source_url": "https://www.fema.gov/fact-sheet/updated-fema-programs-better-assist-people-disabilities"
+  },
+  {
+    "id": "fema-medical-equipment",
+    "plain_statement": "FEMA Other Needs Assistance can help with disaster-caused medical costs, including lost medication and medical equipment.",
+    "applies_when": "After a federally declared disaster affecting your area.",
+    "source_url": "https://www.fema.gov/fact-sheet/fema-assistance-other-needs"
+  },
+  {
+    "id": "fema-late-registration",
+    "plain_statement": "Since March 2024, people who apply after the 60-day window can give an explanation for the delay instead of supporting documents.",
+    "applies_when": "After a federally declared disaster affecting your area.",
+    "source_url": "https://www.everycrsreport.com/reports/IF12785.html"
+  },
+  {
+    "id": "fema-helpline",
+    "plain_statement": "Apply or ask questions by calling the FEMA helpline at 1-800-621-3362, or at DisasterAssistance.gov.",
+    "applies_when": "After a federally declared disaster affecting your area.",
+    "source_url": "https://www.fema.gov/disaster/4780"
+  },
+  {
+    "id": "fema-appeal",
+    "plain_statement": "You have the right to appeal a FEMA decision; the decision letter states the deadline.",
+    "applies_when": "After a federally declared disaster affecting your area.",
+    "source_url": "https://www.fema.gov/disaster/4780"
+  }
+]

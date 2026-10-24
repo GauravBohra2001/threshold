@@ -230,8 +230,14 @@ interface VaultListItemView {
   ai_description: string;
   accessibility_relevant: boolean;
   captured_at: string;
-  /** Short-lived signed URL for the private photo; expires ≤300s (Req 3.8). */
-  signed_url: string;
+  /**
+   * Short-lived signed URL for the private photo; expires ≤300s (Req 3.8).
+   * `null` when this item's photo could not be signed (e.g. the file is
+   * missing from storage); the item is still returned so the vault lists it
+   * with a "Photo not available" placeholder rather than failing the whole
+   * response (Req 22.3).
+   */
+  image_url: string | null;
   /** Text alternative for the stored photo; always non-empty (Req 4.2, 4.3). */
   alt: string;
 }
@@ -242,12 +248,15 @@ const LIST_FAILED_MESSAGE = "Your vault could not be loaded right now.";
  * GET /api/vault — list the current household's vault items.
  *
  * Returns items ordered by capture timestamp descending so the most recently
- * captured item is first (Req 4.4). Each item carries a signed URL that expires
- * within at most 300 seconds (Req 3.8), its stored `label`, and an `alt` that
- * is the AI label when present, otherwise a timestamp-derived value so no photo
- * ever exposes empty/missing alt text (Req 4.2, 4.3, 23.7). Only this
- * household's rows are selected, so no other resident's data is returned
- * (Req 10.1). On a data-store or signing failure the response is a
+ * captured item is first (Req 4.4). Each item carries its stored `label`, an
+ * `alt` that is the AI label when present, otherwise a timestamp-derived value
+ * so no photo ever exposes empty/missing alt text (Req 4.2, 4.3, 23.7), and an
+ * `image_url` that is a signed URL expiring within at most 300 seconds
+ * (Req 3.8). Each photo is signed independently: if signing one item fails
+ * (for example its file is missing from storage), that failure is logged and
+ * the item is returned with `image_url` null, rather than failing the whole
+ * response. Only this household's rows are selected, so no other resident's
+ * data is returned (Req 10.1). On a data-store failure the response is a
  * plain-language fallback with no stack trace (Req 22.3).
  */
 export async function GET(_request: NextRequest): Promise<Response> {
@@ -276,35 +285,38 @@ export async function GET(_request: NextRequest): Promise<Response> {
     return Response.json({ message: LIST_FAILED_MESSAGE }, { status: 502 });
   }
 
-  // Sign each photo for ≤300s and compute non-empty alt text. A signing
-  // failure on any item turns the whole response into a friendly fallback
-  // rather than exposing a broken item or a stack trace.
-  try {
-    const items: VaultListItemView[] = await Promise.all(
-      (data as Array<Record<string, unknown>>).map(async (row) => {
-        const capturedAt = row.captured_at as string;
-        const label = (row.label as string) ?? "";
-        const signedUrl = await createSignedUrl(
-          row.photo_path as string,
-          SIGNED_URL_TTL_SECONDS,
+  // Sign each photo independently for ≤300s and compute non-empty alt text. A
+  // signing failure on one item (e.g. the file is missing from storage) is
+  // logged and that item is returned with image_url null, so one broken photo
+  // never fails the whole response.
+  const items: VaultListItemView[] = await Promise.all(
+    (data as Array<Record<string, unknown>>).map(async (row) => {
+      const capturedAt = row.captured_at as string;
+      const label = (row.label as string) ?? "";
+      const photoPath = row.photo_path as string;
+      let imageUrl: string | null = null;
+      try {
+        imageUrl = await createSignedUrl(photoPath, SIGNED_URL_TTL_SECONDS);
+      } catch (signError) {
+        logServerError(
+          `GET /api/vault sign path=${photoPath}`,
+          signError,
         );
-        return {
-          id: row.id as string,
-          kind: row.kind as VaultKind,
-          label,
-          ai_description: (row.ai_description as string) ?? "",
-          accessibility_relevant: row.accessibility_relevant as boolean,
-          captured_at: capturedAt,
-          signed_url: signedUrl,
-          // AI label when present, else timestamp-derived alt (Req 4.2, 4.3).
-          alt: label.length > 0 ? label : unlabeledAlt(capturedAt),
-        };
-      }),
-    );
+        imageUrl = null;
+      }
+      return {
+        id: row.id as string,
+        kind: row.kind as VaultKind,
+        label,
+        ai_description: (row.ai_description as string) ?? "",
+        accessibility_relevant: row.accessibility_relevant as boolean,
+        captured_at: capturedAt,
+        image_url: imageUrl,
+        // AI label when present, else timestamp-derived alt (Req 4.2, 4.3).
+        alt: label.length > 0 ? label : unlabeledAlt(capturedAt),
+      };
+    }),
+  );
 
-    return Response.json({ items }, { status: 200 });
-  } catch (error) {
-    logServerError("GET /api/vault sign", error);
-    return Response.json({ message: LIST_FAILED_MESSAGE }, { status: 502 });
-  }
+  return Response.json({ items }, { status: 200 });
 }

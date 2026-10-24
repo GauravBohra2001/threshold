@@ -1,7 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
-import { TriangleAlert } from "lucide-react";
+import { Camera, ImagePlus, TriangleAlert } from "lucide-react";
 import {
   MAX_WIDTH,
   QUALITY_STEPS,
@@ -112,16 +112,19 @@ async function resizeToJpeg(file: File): Promise<Blob> {
 }
 
 /**
- * PhotoCapture renders an accessible file input that, on selection, resizes the
- * chosen image in the browser to a JPEG at most 1280px wide and at most 4.5 MB,
- * then hands the resulting blob to `onResized` for the parent to upload. On any
+ * PhotoCapture lets the resident add a photo two ways, then resizes the chosen
+ * image in the browser to a JPEG at most 1280px wide and at most 4.5 MB before
+ * handing the resulting blob to `onResized` for the parent to upload. On any
  * decode, resize, or encode failure it cancels (no blob emitted) and shows
  * "This photo could not be processed." inline, leaving existing state unchanged.
  *
- * The control is a real <input type="file"> with an associated <label> and an
- * accept filter for images; on mobile `capture` offers the camera. Error text
- * is rendered inline next to the control (not color alone) and linked via
- * aria-describedby so VoiceOver / TalkBack announce it.
+ * Two real <button>s drive two hidden <input type="file"> controls so the
+ * resident is never forced into the camera: "Take photo" uses
+ * capture="environment" to open the rear camera on phones, and "Choose from
+ * library" has no capture attribute so it opens the photo library. Both feed
+ * the same resize and upload flow. Error text is rendered inline next to the
+ * controls (icon plus text, not color alone) and linked via aria-describedby
+ * so VoiceOver / TalkBack announce it.
  *
  * Built to WCAG 2.2 AA guidelines and tested with VoiceOver.
  * Requirements: 3.1, 3.2, 23.1, 23.7.
@@ -132,10 +135,11 @@ export default function PhotoCapture({
   hint,
   disabled = false,
 }: PhotoCaptureProps) {
-  const inputId = useId();
+  const groupId = useId();
   const hintId = useId();
   const errorId = useId();
-  const inputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const libraryInputRef = useRef<HTMLInputElement>(null);
   const [error, setError] = useState<string | null>(null);
   const [processing, setProcessing] = useState(false);
 
@@ -167,11 +171,24 @@ export default function PhotoCapture({
       .filter(Boolean)
       .join(" ") || undefined;
 
+  const controlsDisabled = disabled || processing;
+
+  const buttonClasses = [
+    "inline-flex min-h-[56px] w-full items-center justify-center gap-2",
+    "rounded-[14px] px-4 py-2 text-base font-bold",
+    "disabled:cursor-not-allowed",
+  ].join(" ");
+
   return (
-    <div className="flex flex-col gap-2">
-      <label htmlFor={inputId} className="text-base font-semibold">
+    <div
+      role="group"
+      aria-labelledby={groupId}
+      aria-describedby={describedBy}
+      className="flex flex-col gap-2"
+    >
+      <span id={groupId} className="text-base font-semibold">
         {label}
-      </label>
+      </span>
 
       {hint ? (
         <p id={hintId} className="text-base text-muted">
@@ -179,28 +196,57 @@ export default function PhotoCapture({
         </p>
       ) : null}
 
+      {/* Hidden inputs: one forces the camera, one opens the library. Both feed
+          the same resize/upload flow via handleChange. */}
       <input
-        ref={inputRef}
-        id={inputId}
+        ref={cameraInputRef}
         type="file"
         accept="image/*"
         capture="environment"
-        disabled={disabled || processing}
-        aria-describedby={describedBy}
-        aria-invalid={error ? true : undefined}
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
         onChange={handleChange}
-        className={[
-          "block w-full",
-          "min-h-[44px]",
-          "rounded-lg border border-border",
-          "bg-surface text-foreground",
-          "p-3 text-base",
-          "file:mr-4 file:min-h-[44px] file:rounded-md file:border-0",
-          "file:bg-accent file:px-4 file:py-2",
-          "file:text-base file:font-semibold file:text-on-accent",
-          "disabled:opacity-60 disabled:cursor-not-allowed",
-        ].join(" ")}
       />
+      <input
+        ref={libraryInputRef}
+        type="file"
+        accept="image/*"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden="true"
+        onChange={handleChange}
+      />
+
+      <div className="flex flex-col gap-2">
+        <button
+          type="button"
+          disabled={controlsDisabled}
+          onClick={() => cameraInputRef.current?.click()}
+          className={[
+            buttonClasses,
+            "bg-accent text-on-accent",
+            "disabled:bg-surface disabled:text-muted",
+          ].join(" ")}
+        >
+          <Camera aria-hidden="true" className="h-5 w-5 shrink-0" />
+          <span>Take photo</span>
+        </button>
+
+        <button
+          type="button"
+          disabled={controlsDisabled}
+          onClick={() => libraryInputRef.current?.click()}
+          className={[
+            buttonClasses,
+            "border border-accent bg-surface text-accent",
+            "disabled:text-muted",
+          ].join(" ")}
+        >
+          <ImagePlus aria-hidden="true" className="h-5 w-5 shrink-0" />
+          <span>Choose from library</span>
+        </button>
+      </div>
 
       {processing ? (
         <p role="status" aria-live="polite" className="text-base text-muted">

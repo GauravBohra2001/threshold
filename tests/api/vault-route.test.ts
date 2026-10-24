@@ -265,7 +265,7 @@ describe("GET /api/vault", () => {
 
     const [first, second] = json.items;
     expect(first.id).toBe("item-new");
-    expect(first.signed_url).toBe(
+    expect(first.image_url).toBe(
       "https://signed.test/house-1/new.jpg?token=abc",
     );
     // AI label is used as alt when present (Req 4.2).
@@ -301,12 +301,42 @@ describe("GET /api/vault", () => {
     expect(json.message).not.toMatch(/stack|Error:|boom/);
   });
 
-  it("falls back to a friendly message if signing a URL fails (no broken item)", async () => {
+  it("returns the item with image_url null (not a 502) when signing one photo fails", async () => {
     listResult = { data: rows, error: null };
-    createSignedUrlMock.mockRejectedValueOnce(new Error("sign failed"));
+    // The first item's photo is missing from storage; signing it throws.
+    createSignedUrlMock.mockImplementation(async (path: string) => {
+      if (path === "house-1/new.jpg") {
+        throw new Error("could not create signed URL for path house-1/new.jpg");
+      }
+      return `https://signed.test/${path}?token=abc`;
+    });
+    const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
+
     const res = await GET(makeGetRequest());
-    expect(res.status).toBe(502);
-    const json = (await res.json()) as { message: string };
-    expect(json.message).toMatch(/could not be loaded/i);
+    expect(res.status).toBe(200);
+
+    const json = (await res.json()) as {
+      items: Array<Record<string, unknown>>;
+    };
+    expect(json.items).toHaveLength(2);
+
+    // The failing item is still returned, with image_url null and its label
+    // and date intact, so the vault can show a "Photo not available" tile.
+    const [first, second] = json.items;
+    expect(first.id).toBe("item-new");
+    expect(first.image_url).toBeNull();
+    expect(first.label).toBe("Power wheelchair");
+    expect(first.captured_at).toBe("2026-02-10T12:00:00Z");
+
+    // The other item signs normally.
+    expect(second.id).toBe("item-old");
+    expect(second.image_url).toBe(
+      "https://signed.test/house-1/old.jpg?token=abc",
+    );
+
+    // The signing failure was logged via logServerError (console.error), with
+    // no stack trace in the response body.
+    expect(errorSpy).toHaveBeenCalled();
+    errorSpy.mockRestore();
   });
 });
