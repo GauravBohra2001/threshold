@@ -60,6 +60,7 @@ interface HouseholdView {
   caregiver_name: string | null;
   invite_code: string;
   invite_url: string;
+  is_demo: boolean;
 }
 
 /**
@@ -167,6 +168,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     caregiver_name: null,
     invite_code: inserted.invite_code,
     invite_url: buildInviteUrl(request, inserted.invite_code),
+    is_demo: false,
   };
 
   return Response.json(view, { status: 201 });
@@ -199,6 +201,7 @@ export async function GET(request: NextRequest): Promise<Response> {
     caregiver_name: household.caregiver_name,
     invite_code: household.invite_code,
     invite_url: buildInviteUrl(request, household.invite_code),
+    is_demo: household.is_demo,
   };
 
   return Response.json(view, { status: 200 });

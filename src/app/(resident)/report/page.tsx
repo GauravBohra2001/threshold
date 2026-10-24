@@ -4,6 +4,7 @@ import { useCallback, useId, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Check, MapPin, TriangleAlert } from "lucide-react";
 
+import BackLink from "@/components/BackLink";
 import LiveRegion from "@/components/LiveRegion";
 import PhotoCapture from "@/components/PhotoCapture";
 import Button from "@/components/ui/Button";
@@ -211,6 +212,7 @@ export default function ReportBarrierPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-8">
+      <BackLink />
       <LiveRegion politeness="polite">{announcement}</LiveRegion>
 
       <h1 className="text-[28px]">Report a barrier</h1>

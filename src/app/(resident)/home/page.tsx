@@ -1,11 +1,12 @@
 "use client";
 
-import { useId, useState } from "react";
+import { useEffect, useId, useState } from "react";
 import { TriangleAlert } from "lucide-react";
 
 import LiveRegion from "@/components/LiveRegion";
 import Button from "@/components/ui/Button";
 import Panel from "@/components/ui/Panel";
+import HomeHub from "./HomeHub";
 
 /**
  * Resident household-create screen (ui-design.md).
@@ -45,6 +46,33 @@ export default function ResidentHomePage() {
   const [submitting, setSubmitting] = useState(false);
   const [created, setCreated] = useState<HouseholdCreated | null>(null);
   const [announcement, setAnnouncement] = useState("");
+  // Whether a household already exists (then we show the hub, not the form).
+  const [existing, setExisting] = useState<
+    { resident_name: string; is_demo: boolean } | null
+  >(null);
+  const [checked, setChecked] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    void fetch("/api/household", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => {
+        if (!active) return;
+        if (data && typeof data === "object" && "id" in data) {
+          setExisting({
+            resident_name: (data as { resident_name?: string }).resident_name ?? "there",
+            is_demo: (data as { is_demo?: boolean }).is_demo === true,
+          });
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setChecked(true);
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   async function handleSubmit(
     event: React.FormEvent<HTMLFormElement>,
@@ -88,6 +116,20 @@ export default function ResidentHomePage() {
     } finally {
       setSubmitting(false);
     }
+  }
+
+  // A household already exists for this browser: show the feature hub.
+  if (existing && !created) {
+    return <HomeHub residentName={existing.resident_name} isDemo={existing.is_demo} />;
+  }
+
+  // Avoid flashing the create form before the existence check resolves.
+  if (!checked && !created) {
+    return (
+      <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-8">
+        <p role="status" className="text-muted">Loading</p>
+      </main>
+    );
   }
 
   if (created) {

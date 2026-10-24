@@ -4,6 +4,7 @@
 import { Suspense, use, useCallback, useEffect, useId, useRef, useState } from "react";
 import { CircleCheck, FileText, Info, TriangleAlert } from "lucide-react";
 
+import BackLink from "@/components/BackLink";
 import LiveRegion from "@/components/LiveRegion";
 import Button from "@/components/ui/Button";
 import Panel from "@/components/ui/Panel";
@@ -317,6 +318,7 @@ function CaseDetail({ params }: CasePageProps) {
   if (load.state === "loading") {
     return (
       <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-8">
+      <BackLink />
         <LiveRegion politeness="polite">Loading your report.</LiveRegion>
         <h1 className="text-[28px]">Your report</h1>
         <p role="status" className="mt-4 text-muted">

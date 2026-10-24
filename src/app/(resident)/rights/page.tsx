@@ -3,6 +3,7 @@
 import { useCallback, useId, useState } from "react";
 import { Scale, TriangleAlert } from "lucide-react";
 
+import BackLink from "@/components/BackLink";
 import LiveRegion from "@/components/LiveRegion";
 import RightsStatement from "@/components/RightsStatement";
 import Banner from "@/components/ui/Banner";
@@ -147,6 +148,7 @@ export default function RightsPage() {
 
   return (
     <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-8">
+      <BackLink />
       <LiveRegion politeness="polite">
         {entry ? `Showing right ${current + 1} of ${total}.` : ""}
       </LiveRegion>
