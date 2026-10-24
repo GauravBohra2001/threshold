@@ -6,16 +6,18 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "vitest run"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.118.0",
+    "@supabase/supabase-js": "2.118.0",
     "date-fns": "^4.4.0",
     "lucide-react": "^1.61.0",
     "next": "16.4.3",
     "openai": "^7.43.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
+    "server-only": "0.0.1",
     "twilio": "^6.2.0",
     "zod": "^4.6.7"
   },

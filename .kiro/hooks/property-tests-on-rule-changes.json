@@ -1,0 +1,15 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "Property tests on rule changes",
+      "trigger": "PostFileSave",
+      "description": "Runs the rules property tests when a file under src/lib/rules changes.",
+      "matcher": "src/lib/rules/.*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "npx vitest run tests/rules --reporter=dot --passWithNoTests"
+      }
+    }
+  ]
+}

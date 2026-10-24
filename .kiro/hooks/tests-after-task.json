@@ -2,10 +2,13 @@
   "version": "v1",
   "hooks": [
     {
-      "name": "Run unit and property tests after each spec task",
-      "trigger": "PostTaskExecution",
-      "action": { "type": "command", "command": "npx vitest run --reporter=dot" },
-      "timeout": 120
+      "name": "Run tests after each spec task",
+      "trigger": "PostTaskExec",
+      "description": "Runs the full vitest suite after a spec task completes.",
+      "action": {
+        "type": "command",
+        "command": "npx vitest run --reporter=dot --passWithNoTests"
+      }
     }
   ]
 }
