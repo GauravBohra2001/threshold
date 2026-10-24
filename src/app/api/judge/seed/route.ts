@@ -1,5 +1,6 @@
 import { setHouseholdCookie } from "@/lib/auth/household";
 import { db } from "@/lib/data/supabase";
+import { logServerError } from "@/lib/log";
 
 /**
  * GET /api/judge/seed — idempotent Judge Mode demo seeding (Req 20.1–20.4).
@@ -237,8 +238,9 @@ export async function GET(): Promise<Response> {
       created: true,
     };
     return Response.json(view, { status: 201 });
-  } catch {
+  } catch (error) {
     // Data store unavailable: friendly fallback, no stack trace.
+    logServerError("GET /api/judge/seed", error);
     return Response.json({ message: SEED_FAILED_MESSAGE }, { status: 502 });
   }
 }

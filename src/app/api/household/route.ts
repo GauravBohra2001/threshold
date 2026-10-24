@@ -3,6 +3,7 @@ import type { NextRequest } from "next/server";
 import { getCurrentHousehold, setHouseholdCookie } from "@/lib/auth/household";
 import { lookup } from "@/lib/data/geocoder";
 import { db } from "@/lib/data/supabase";
+import { logServerError } from "@/lib/log";
 import {
   generateInviteCode,
   validateHouseholdInput,
@@ -147,7 +148,8 @@ export async function POST(request: NextRequest): Promise<Response> {
       county_fips: geo.match.countyFips,
       neighborhood: geo.match.neighborhood,
     });
-  } catch {
+  } catch (error) {
+    logServerError("POST /api/household insert", error);
     return Response.json({ message: SAVE_FAILED_MESSAGE }, { status: 502 });
   }
 
@@ -174,7 +176,8 @@ export async function GET(request: NextRequest): Promise<Response> {
   let household;
   try {
     household = await getCurrentHousehold();
-  } catch {
+  } catch (error) {
+    logServerError("GET /api/household", error);
     return Response.json({ message: SAVE_FAILED_MESSAGE }, { status: 502 });
   }
 

@@ -18,6 +18,7 @@
 import type { NextRequest } from 'next/server';
 
 import { db } from '@/lib/data/supabase';
+import { logServerError } from '@/lib/log';
 
 /** Attach must complete within 5 seconds (Requirement 2.2). */
 const ATTACH_BUDGET_MS = 5_000;
@@ -44,12 +45,12 @@ function validateCaregiverName(value: unknown): FieldError | null {
   return null;
 }
 
-/** Validates the caregiver phone: 10 to 15 digits (no other characters). */
+/** Validates the caregiver phone: 10 to 15 digits, with an optional leading "+" (E.164). */
 function validateCaregiverPhone(value: unknown): FieldError | null {
-  if (typeof value !== 'string' || !/^[0-9]{10,15}$/.test(value)) {
+  if (typeof value !== 'string' || !/^\+?[0-9]{10,15}$/.test(value)) {
     return {
       field: 'caregiver_phone',
-      message: 'Please enter a phone number with 10 to 15 digits.',
+      message: 'Please enter a phone number with 10 to 15 digits, with an optional leading +.',
     };
   }
   return null;
@@ -186,9 +187,10 @@ export async function POST(request: NextRequest): Promise<Response> {
     }
 
     return Response.json({ ok: true }, { status: 200 });
-  } catch {
+  } catch (error) {
     // Data store unavailable or timed out: friendly 503, attach nothing, no
     // stack trace (Requirement 2.6).
+    logServerError('POST /api/invite/accept', error);
     return Response.json(
       {
         message:

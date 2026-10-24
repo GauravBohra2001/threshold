@@ -8,6 +8,7 @@ import {
   SIGNED_URL_TTL_SECONDS,
   uploadToVault,
 } from "@/lib/data/supabase";
+import { logServerError } from "@/lib/log";
 
 /**
  * Proof Vault photo pipeline route handler (Next 16 App Router, server-only).
@@ -123,7 +124,8 @@ export async function POST(request: NextRequest): Promise<Response> {
   let householdId: string | null;
   try {
     householdId = await getCurrentHouseholdId();
-  } catch {
+  } catch (error) {
+    logServerError("POST /api/vault cookie", error);
     return Response.json({ message: SAVE_FAILED_MESSAGE }, { status: 502 });
   }
   if (!householdId) {
@@ -196,6 +198,7 @@ export async function POST(request: NextRequest): Promise<Response> {
     .single();
 
   if (error || !data) {
+    logServerError("POST /api/vault insert", error);
     return Response.json({ message: SAVE_FAILED_MESSAGE }, { status: 502 });
   }
 
@@ -252,7 +255,8 @@ export async function GET(_request: NextRequest): Promise<Response> {
   let householdId: string | null;
   try {
     householdId = await getCurrentHouseholdId();
-  } catch {
+  } catch (error) {
+    logServerError("GET /api/vault cookie", error);
     return Response.json({ message: LIST_FAILED_MESSAGE }, { status: 502 });
   }
   if (!householdId) {
@@ -268,6 +272,7 @@ export async function GET(_request: NextRequest): Promise<Response> {
     .order("captured_at", { ascending: false });
 
   if (error || !data) {
+    logServerError("GET /api/vault list", error);
     return Response.json({ message: LIST_FAILED_MESSAGE }, { status: 502 });
   }
 
@@ -298,7 +303,8 @@ export async function GET(_request: NextRequest): Promise<Response> {
     );
 
     return Response.json({ items }, { status: 200 });
-  } catch {
+  } catch (error) {
+    logServerError("GET /api/vault sign", error);
     return Response.json({ message: LIST_FAILED_MESSAGE }, { status: 502 });
   }
 }
