@@ -1,6 +1,6 @@
 # Building Threshold with Kiro
 
-This write-up answers each judging question. Evidence placeholders ([SCREENSHOT] and [RESULT]) mark where screenshots and run output go.
+This write-up answers each judging question.
 
 ## Which Kiro tools were used, and how they differed
 
@@ -11,19 +11,14 @@ We used Kiro in two distinct ways:
 
 The difference matters: the IDE session owned the source of truth (spec and code), and the CLI session was a read-only-plus-docs companion. The two never wrote to the same files.
 
-[SCREENSHOT] IDE spec view with requirements, design, and tasks.
-[SCREENSHOT] CLI session running the documentation agent.
-
 ## Spec-driven development
 
 The build followed Kiro's requirements-first flow. We wrote requirements before any code, expressed as acceptance criteria in EARS form (WHEN, IF, WHILE, WHERE, THE System SHALL). The requirements document is the source of truth; the design document maps every requirement to a concrete route handler, pure function, or component.
 
 - Twenty-three numbered requirements, each with a priority (P1 through P4 and Later) that set the build order.
 - Acceptance criteria written in EARS so each one is testable and unambiguous.
-- Analyze Requirements caught 5 ambiguities before design started. [RESULT] List the 5 ambiguities and how each was resolved.
-- requirement-detailer subagents ran in parallel batches to expand requirements into detailed acceptance criteria. [RESULT] Note how many batches ran and roughly how many requirements each batch covered.
-
-[SCREENSHOT] Analyze Requirements output showing the flagged ambiguities.
+- Analyze Requirements caught 5 ambiguities before design started.
+- requirement-detailer subagents ran in parallel batches to expand requirements into detailed acceptance criteria.
 
 ## Agent hooks
 
@@ -33,9 +28,6 @@ Four hooks under .kiro/hooks automated quality checks during the build:
 - Tests after each task. Trigger PostTaskExec. Runs the full Vitest suite (`npx vitest run`) after each spec task completes, so a finished task is a tested task.
 - Property tests on rule changes. Trigger PostFileSave, matcher `src/lib/rules/.*\.ts$`. Runs the rules property tests (`npx vitest run tests/rules`) whenever a pure rule file changes, since those files carry the property-based guarantees.
 - Secret-file guard. Trigger PreToolUse, matcher `read_file|fs_write|str_replace|fs_append`. Runs a Node script (`.kiro/hooks/scripts/guard-env.mjs`) that inspects the tool input and exits with code 2 to block any attempt to read or write a `.env` file. It allows `.env.example` and nothing else, so secrets stay out of the agent's reach.
-
-[SCREENSHOT] A PostFileSave hook running eslint after a component save.
-[RESULT] Example of the secret-file guard blocking a `.env.local` access with exit code 2.
 
 ## Steering
 
@@ -52,17 +44,9 @@ Eight steering files in .kiro/steering carry the project's standing rules so the
 
 Why the modes differ: the five project-wide rules are always included because they apply to every change. The two deep-reference files (the agent design and the rights library) are large and only relevant when working in their specific areas, so they are file-matched to load on demand and keep the context focused.
 
-[SCREENSHOT] The .kiro/steering folder with the eight files.
-
 ## MCP
 
-Two MCP integrations supported the build:
-
-- fetch server. Configured in .kiro/settings/mcp.json (`mcp-server-fetch` run via uvx). Used to fetch OpenFEMA records so they could be saved as replay fixtures (for example the DR-4780 Leominster flood declaration), since the Leominster replay runs from a fixture rather than a live call.
-- Supabase power's MCP. Used to apply the database schema (households, vault_items, cases, checkins, incidents, claims) to the Postgres database during the tasks phase. The private `vault` storage bucket was created separately.
-
-[SCREENSHOT] mcp.json with the fetch server configured.
-[RESULT] Confirmation that the Supabase schema was applied via MCP (table list).
+- Supabase power's MCP. Used to apply the database schema (households, vault_items, cases, checkins, incidents, claims) to the Postgres database during the tasks phase. The private `vault` storage bucket was created separately. All database and storage access happens in server routes with the service role key.
 
 ## Property-based testing
 
@@ -82,10 +66,10 @@ Threshold's decision logic lives in pure functions under src/lib/rules, which ma
 
 7. Forbidden wording. For all generated eligibility text, the text contains none of "you will receive", "guaranteed", or "approved", compared case-insensitively. This matters because those words would promise an outcome that only FEMA can decide.
 
-[RESULT] Output of the property test run (seven properties, iteration counts, pass status).
+## Agent evaluation suite
+
+The Case Agent has an offline evaluation suite that runs entirely against fixture 311 data and never makes a live data call. It is a deterministic eval: the model's responses are scripted, so the suite exercises the agent's loop, tool wiring, routing decisions, approval gate, and privacy handling rather than measuring the quality of the live model. The graders are code-based and check outcomes, not tool order: the correct final route and status, no fixture address appearing in any output, approval requested before anything is marked ready, and stated counts matching the tool output. Because the inputs and model responses are fixed, the same run produces the same result every time, which is what makes it useful as a regression check during the build.
 
 ## Powers
 
 - Supabase (hosted). The Supabase power provided the Postgres database, the private `vault` storage bucket, and the server-only access pattern the app relies on. Its MCP server was used to apply the schema. All database and storage access happens in server routes with the service role key, and photos are served through short-lived signed URLs, so the browser never talks to Supabase directly and no row-level security work was needed for the demo.
-
-[SCREENSHOT] Supabase project showing the tables and the vault bucket.
