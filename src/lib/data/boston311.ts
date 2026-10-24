@@ -226,9 +226,9 @@ export async function searchNearbyOpen(
     SELECT case_id, service_name, open_date, case_status, target_close_date,
            latitude, longitude
     FROM "${rid}"
-    WHERE case_status = 'Open'
-      AND latitude BETWEEN ${box.minLat} AND ${box.maxLat}
-      AND longitude BETWEEN ${box.minLng} AND ${box.maxLng}
+    WHERE case_status <> 'Closed'
+      AND latitude::float8 BETWEEN ${box.minLat} AND ${box.maxLat}
+      AND longitude::float8 BETWEEN ${box.minLng} AND ${box.maxLng}
       ${serviceFilter}
     LIMIT 1000
   `.trim();
