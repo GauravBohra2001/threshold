@@ -1,156 +1,143 @@
 @import "tailwindcss";
 
 /*
- * Threshold global accessibility foundations.
- * Built to WCAG 2.2 AA guidelines and tested with VoiceOver.
+ * Threshold design system (ui-design.md). Built to WCAG 2.2 AA guidelines and
+ * tested with VoiceOver.
  *
- * Color tokens are chosen so body text meets a contrast ratio of at least
- * 4.5:1 against its background in both light and dark mode, and the focus
- * outline meets at least 3:1 against adjacent colors (Req 23.5, 23.8, 23.13).
+ * Colors are OKLCH, tinted toward the accent hue (255). No pure black/gray,
+ * no #FFFFFF, no alpha transparency, no gradients except the tactile strip.
  */
 
 :root {
-  /* Light mode (default). */
-  --background: #ffffff; /* page background */
-  --foreground: #17191c; /* body text: ~15.8:1 on #ffffff */
-  --muted-foreground: #45494e; /* secondary text: ~8.5:1 on #ffffff */
-  --surface: #f4f5f7; /* raised surfaces (cards, regions) */
-  --border: #c3c7cc; /* decorative borders */
+  /* Neutrals (tinted toward hue 255). */
+  --bg: oklch(95.5% 0.006 255);
+  --surface: oklch(99.5% 0.003 255);
+  --ink: oklch(24% 0.025 255);
+  --muted: oklch(47% 0.025 255);
+  --line: oklch(88% 0.01 255);
+  --control-border: oklch(60% 0.02 255);
 
-  /* Primary action: white text (#ffffff) on this color is ~5.9:1. */
-  --primary: #1a4fd6;
-  --primary-hover: #163fac;
-  --primary-foreground: #ffffff;
+  /* Accent (International Symbol of Access blue). */
+  --accent: oklch(48% 0.16 255);
+  --on-accent: var(--surface);
 
-  /* Alert accent, paired with text + icon (never color alone). */
-  --alert: #a3122a; /* ~6.9:1 on #ffffff */
+  /* Tactile warning strip (curb-ramp yellow). */
+  --tactile: oklch(84% 0.16 90);
+  --tactile-dot: oklch(62% 0.12 85);
 
-  /* Focus indicator color: ~3.3:1 against both --background and --surface. */
-  --focus-ring: #0b63e6;
+  /* Status. */
+  --danger: oklch(52% 0.19 27);
+  --success: oklch(50% 0.12 150);
 
-  /* Minimum interactive target size (WCAG 2.2 target size). */
+  /* Type scale: four sizes only. */
+  --text-small: 16px;
+  --text-body: 18px;
+  --text-heading: 22px;
+  --text-title: 28px;
+  --leading-body: 1.55;
+  --leading-heading: 1.2;
+
+  /* Interactive sizing. */
   --target-min: 44px;
-
-  /* Base type scale: body text is at least 18px (Req 23.5). */
-  --font-size-base: 18px;
-  --line-height-base: 1.5;
+  --primary-height: 56px;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0e1013;
-    --foreground: #f1f3f5; /* ~16:1 on #0e1013 */
-    --muted-foreground: #c0c5cc; /* ~9.6:1 on #0e1013 */
-    --surface: #1a1e23;
-    --border: #3a4049;
-
-    /* White text on this blue is ~4.9:1. */
-    --primary: #4f8dff;
-    --primary-hover: #6ea0ff;
-    --primary-foreground: #0a0c0f;
-
-    --alert: #ff8a93; /* ~7:1 on #0e1013, paired with text + icon */
-
-    --focus-ring: #8cc0ff; /* high contrast against dark surfaces */
+    --bg: oklch(17% 0.012 255);
+    --surface: oklch(22% 0.014 255);
+    --ink: oklch(94% 0.008 255);
+    --muted: oklch(74% 0.02 255);
+    --line: oklch(32% 0.015 255);
+    --control-border: oklch(55% 0.02 255);
+    --accent: oklch(74% 0.12 255);
+    --on-accent: var(--bg);
+    --tactile: oklch(84% 0.16 90);
+    --tactile-dot: oklch(62% 0.12 85);
+    --danger: oklch(74% 0.14 27);
+    --success: oklch(78% 0.13 150);
   }
 }
 
-/*
- * Explicit theme override via data-theme on <html>, so the app can offer a
- * manual light/dark toggle independent of the OS preference (Req 23.13).
- */
-:root[data-theme="light"] {
-  --background: #ffffff;
-  --foreground: #17191c;
-  --muted-foreground: #45494e;
-  --surface: #f4f5f7;
-  --border: #c3c7cc;
-  --primary: #1a4fd6;
-  --primary-hover: #163fac;
-  --primary-foreground: #ffffff;
-  --alert: #a3122a;
-  --focus-ring: #0b63e6;
-}
-
-:root[data-theme="dark"] {
-  --background: #0e1013;
-  --foreground: #f1f3f5;
-  --muted-foreground: #c0c5cc;
-  --surface: #1a1e23;
-  --border: #3a4049;
-  --primary: #4f8dff;
-  --primary-hover: #6ea0ff;
-  --primary-foreground: #0a0c0f;
-  --alert: #ff8a93;
-  --focus-ring: #8cc0ff;
-}
-
-/* Expose tokens to Tailwind utilities (bg-background, text-foreground, ...). */
+/* Expose tokens to Tailwind utilities (bg-bg, text-ink, border-line, ...). */
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-muted-foreground: var(--muted-foreground);
+  --color-bg: var(--bg);
   --color-surface: var(--surface);
-  --color-border: var(--border);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-alert: var(--alert);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-ink: var(--ink);
+  --color-muted: var(--muted);
+  --color-line: var(--line);
+  --color-control-border: var(--control-border);
+  --color-accent: var(--accent);
+  --color-on-accent: var(--on-accent);
+  --color-tactile: var(--tactile);
+  --color-tactile-dot: var(--tactile-dot);
+  --color-danger: var(--danger);
+  --color-success: var(--success);
+  --font-sans: var(--font-atkinson);
 }
 
 html {
   color-scheme: light dark;
-  /* Base font size: body text is at least 18px. */
-  font-size: var(--font-size-base);
+  font-size: var(--text-body);
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: var(--font-sans), system-ui, -apple-system, "Segoe UI", Roboto,
-    Helvetica, Arial, sans-serif;
-  font-size: 1rem; /* 1rem === 18px via the html font-size above */
-  line-height: var(--line-height-base);
-  -webkit-font-smoothing: antialiased;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-atkinson), system-ui, sans-serif;
+  font-size: 1rem; /* 18px via html font-size */
+  line-height: var(--leading-body);
   text-rendering: optimizeLegibility;
 }
 
+@media (prefers-color-scheme: dark) {
+  body {
+    /* Compensate for light-on-dark bloom. */
+    letter-spacing: 0.01em;
+  }
+}
+
+h1,
+h2,
+h3 {
+  line-height: var(--leading-heading);
+  font-weight: 700;
+  text-wrap: balance;
+}
+
+p {
+  text-wrap: pretty;
+  max-width: 65ch;
+}
+
 /*
- * Visible focus indicator on every interactive element, with a ratio of at
- * least 3:1 against adjacent colors (Req 23.8). Keyboard-focus only so that
- * pointer users do not see a persistent ring.
+ * Visible focus on every interactive element, keyboard-focus only. 3px accent
+ * outline with 2px offset (ui-design.md). Never removed.
  */
 :focus-visible {
-  outline: 3px solid var(--focus-ring);
+  outline: 3px solid var(--accent);
   outline-offset: 2px;
   border-radius: 2px;
 }
 
-/* Never remove focus styling globally; only swap to the visible ring above. */
 :focus:not(:focus-visible) {
   outline: none;
 }
 
 /*
- * Every interactive target is at least 44x44 CSS px (Req 23.3). This is a
- * floor; components may set a larger size.
+ * The tactile strip: decorative, aria-hidden, solid colors only. Dotted yellow
+ * warning pad. Placed only on TOP edges (header, attention banners, Rights
+ * Card). Never a side/left border.
  */
-a[role="button"],
-button,
-input,
-select,
-textarea,
-[role="switch"],
-[role="link"] {
-  min-height: var(--target-min);
+.tactile-strip {
+  height: 8px;
+  background:
+    radial-gradient(circle, var(--tactile-dot) 1.5px, transparent 2px) 0 0 /
+      8px 8px,
+    var(--tactile);
 }
 
-/*
- * Respect prefers-reduced-motion: disable non-essential animation and
- * transitions and defeat smooth scrolling (Req 23.11).
- */
+/* Reduced motion: all motion becomes instant (ui-design.md). */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -162,10 +149,7 @@ textarea,
   }
 }
 
-/*
- * Visually hidden utility for screen-reader-only text. The element stays in
- * the accessibility tree and is announced, but is not painted on screen.
- */
+/* Screen-reader-only text: announced but not painted. */
 .sr-only {
   position: absolute;
   width: 1px;

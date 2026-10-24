@@ -1,49 +1,35 @@
 "use client";
 
 import { useId, useState } from "react";
+import { TriangleAlert } from "lucide-react";
 
 import LiveRegion from "@/components/LiveRegion";
-import PrimaryButton from "@/components/PrimaryButton";
+import Button from "@/components/ui/Button";
+import Panel from "@/components/ui/Panel";
 
 /**
- * Resident household-create screen.
+ * Resident household-create screen (ui-design.md).
  *
- * An accessible form that POSTs to `POST /api/household` with
- * `{ resident_name, address }`. It uses real <label>s tied to each input,
- * renders field-level errors ({ field, message }) next to the offending field,
- * retains the entered values on error (Req 1.3), places the primary action as a
- * full-width PrimaryButton at the bottom of the screen (Req 23.4) with ≥44×44px
- * targets (Req 23.3), and announces success via a polite aria-live region
- * (Req 23.9). On success it shows the caregiver invite link returned by the API.
- *
- * Semantic HTML only — real <form>, <label>, <input>, <button>; no clickable
- * divs (Req 23.1). This is a client component because it owns form state and
- * calls the server route handler (the only data boundary).
- *
- * Built to WCAG 2.2 AA guidelines and tested with VoiceOver.
- * Requirements: 1.3, 2.1, 23.1, 23.3, 23.4, 23.9.
+ * An accessible form that POSTs to POST /api/household. Labels sit above 56px
+ * inputs; field errors render below the field in --danger with an icon and
+ * text, linked via aria-describedby; entered values are retained on error
+ * (Req 1.3). The one primary action is a full-width button at the bottom
+ * (Req 23.4). Success shows a confirmation Panel plus the caregiver invite
+ * link, announced politely (Req 23.9).
  */
 
-/** A created household, as returned by `POST /api/household` (201). */
 interface HouseholdCreated {
   id: string;
   resident_name: string;
-  address: string;
-  neighborhood: string | null;
-  caregiver_name: string | null;
-  invite_code: string;
   invite_url: string;
 }
 
-/** The two fields that can carry a field-level validation error. */
 type FieldName = "resident_name" | "address";
 
 const GENERIC_ERROR =
   "We couldn't create your household right now. Please try again in a moment.";
 
 export default function ResidentHomePage() {
-  // Stable ids so each <label> is tied to its input and each error is wired
-  // through aria-describedby for screen readers.
   const nameId = useId();
   const addressId = useId();
   const nameErrorId = `${nameId}-error`;
@@ -52,7 +38,6 @@ export default function ResidentHomePage() {
 
   const [residentName, setResidentName] = useState("");
   const [address, setAddress] = useState("");
-
   const [fieldErrors, setFieldErrors] = useState<
     Partial<Record<FieldName, string>>
   >({});
@@ -65,28 +50,17 @@ export default function ResidentHomePage() {
     event: React.FormEvent<HTMLFormElement>,
   ): Promise<void> {
     event.preventDefault();
-    if (submitting) {
-      return;
-    }
-
+    if (submitting) return;
     setSubmitting(true);
     setFieldErrors({});
     setFormError("");
     setAnnouncement("");
-
     try {
       const response = await fetch("/api/household", {
         method: "POST",
         headers: { "content-type": "application/json" },
-        // Entered values stay in state regardless of the outcome (Req 1.3).
-        body: JSON.stringify({
-          resident_name: residentName,
-          address,
-        }),
+        body: JSON.stringify({ resident_name: residentName, address }),
       });
-
-      // A 400 carries a field-level { field, message }; render it next to the
-      // offending field and keep the entered values (Req 1.3).
       if (response.status === 400) {
         const body = (await response.json()) as {
           field?: FieldName;
@@ -99,8 +73,6 @@ export default function ResidentHomePage() {
         }
         return;
       }
-
-      // Any other non-success status carries a plain-language { message }.
       if (!response.ok) {
         const body = (await response.json().catch(() => ({}))) as {
           message?: string;
@@ -108,10 +80,8 @@ export default function ResidentHomePage() {
         setFormError(body.message ?? GENERIC_ERROR);
         return;
       }
-
       const household = (await response.json()) as HouseholdCreated;
       setCreated(household);
-      // Polite announcement of success (Req 23.9).
       setAnnouncement("Household created.");
     } catch {
       setFormError(GENERIC_ERROR);
@@ -120,19 +90,17 @@ export default function ResidentHomePage() {
     }
   }
 
-  // Success view: confirm and surface the caregiver invite link.
   if (created) {
     return (
-      <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 py-8">
+      <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-8">
         <LiveRegion politeness="polite">{announcement}</LiveRegion>
-        <h1 className="text-2xl font-semibold">Household created</h1>
-        <p className="mt-4 text-muted-foreground">
-          Share this link with your caregiver so they can accept the invite.
-        </p>
-        <div className="mt-6 rounded-lg border border-border bg-surface p-4">
-          <h2 className="text-lg font-semibold">Caregiver invite link</h2>
+        <Panel title="Household created">
+          <p>Share this link with your caregiver.</p>
+        </Panel>
+        <div className="mt-6 rounded-[18px] border border-line bg-surface p-4">
+          <h2 className="text-[22px]">Caregiver invite link</h2>
           <p className="mt-2 break-words">
-            <a href={created.invite_url} className="font-medium text-primary underline">
+            <a href={created.invite_url} className="text-accent underline">
               {created.invite_url}
             </a>
           </p>
@@ -142,12 +110,11 @@ export default function ResidentHomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-dvh w-full max-w-md flex-col px-4 py-8">
-      {/* Polite announcer so a screen reader hears confirmations (Req 23.9). */}
+    <main className="mx-auto flex min-h-dvh w-full max-w-[480px] flex-col px-5 py-8">
       <LiveRegion politeness="polite">{announcement}</LiveRegion>
 
-      <h1 className="text-2xl font-semibold">Create your household</h1>
-      <p className="mt-2 text-muted-foreground">
+      <h1 className="text-[28px]">Create your household</h1>
+      <p className="mt-2 text-muted">
         Tell us who you are and where you live. You can invite a caregiver next.
       </p>
 
@@ -157,19 +124,19 @@ export default function ResidentHomePage() {
         noValidate
         aria-describedby={formError ? formErrorId : undefined}
       >
-        {/* Form-level error (e.g. geocoder down, save failed). */}
         {formError ? (
           <p
             id={formErrorId}
             role="alert"
-            className="mb-6 rounded-lg border border-alert bg-surface p-3 text-alert"
+            className="mb-6 flex items-start gap-2 rounded-[18px] border border-danger bg-surface p-3 text-danger"
           >
-            {formError}
+            <TriangleAlert aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
+            <span>{formError}</span>
           </p>
         ) : null}
 
         <div className="flex flex-col gap-2">
-          <label htmlFor={nameId} className="text-lg font-medium">
+          <label htmlFor={nameId} className="font-bold">
             Your name
           </label>
           <input
@@ -181,20 +148,19 @@ export default function ResidentHomePage() {
             value={residentName}
             onChange={(event) => setResidentName(event.target.value)}
             aria-invalid={fieldErrors.resident_name ? true : undefined}
-            aria-describedby={
-              fieldErrors.resident_name ? nameErrorId : undefined
-            }
-            className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-base"
+            aria-describedby={fieldErrors.resident_name ? nameErrorId : undefined}
+            className="min-h-[56px] rounded-[12px] border border-control-border bg-surface px-3 text-ink"
           />
           {fieldErrors.resident_name ? (
-            <p id={nameErrorId} className="text-alert">
-              {fieldErrors.resident_name}
+            <p id={nameErrorId} className="flex items-start gap-2 text-danger">
+              <TriangleAlert aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
+              <span>{fieldErrors.resident_name}</span>
             </p>
           ) : null}
         </div>
 
         <div className="mt-6 flex flex-col gap-2">
-          <label htmlFor={addressId} className="text-lg font-medium">
+          <label htmlFor={addressId} className="font-bold">
             Home address
           </label>
           <input
@@ -207,20 +173,25 @@ export default function ResidentHomePage() {
             onChange={(event) => setAddress(event.target.value)}
             aria-invalid={fieldErrors.address ? true : undefined}
             aria-describedby={fieldErrors.address ? addressErrorId : undefined}
-            className="min-h-[44px] rounded-lg border border-border bg-background px-3 py-2 text-base"
+            className="min-h-[56px] rounded-[12px] border border-control-border bg-surface px-3 text-ink"
           />
           {fieldErrors.address ? (
-            <p id={addressErrorId} className="text-alert">
-              {fieldErrors.address}
+            <p id={addressErrorId} className="flex items-start gap-2 text-danger">
+              <TriangleAlert aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
+              <span>{fieldErrors.address}</span>
             </p>
           ) : null}
         </div>
 
-        {/* Full-width primary action at the bottom of the screen (Req 23.4). */}
         <div className="mt-auto pt-8">
-          <PrimaryButton type="submit" disabled={submitting}>
-            {submitting ? "Creating…" : "Create household"}
-          </PrimaryButton>
+          <Button
+            type="submit"
+            fullWidth
+            loading={submitting}
+            loadingLabel="Creating household"
+          >
+            Create household
+          </Button>
         </div>
       </form>
     </main>

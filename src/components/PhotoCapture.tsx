@@ -1,6 +1,7 @@
 "use client";
 
 import { useId, useRef, useState } from "react";
+import { TriangleAlert } from "lucide-react";
 import {
   MAX_WIDTH,
   QUALITY_STEPS,
@@ -173,7 +174,7 @@ export default function PhotoCapture({
       </label>
 
       {hint ? (
-        <p id={hintId} className="text-base text-muted-foreground">
+        <p id={hintId} className="text-base text-muted">
           {hint}
         </p>
       ) : null}
@@ -195,14 +196,14 @@ export default function PhotoCapture({
           "bg-surface text-foreground",
           "p-3 text-base",
           "file:mr-4 file:min-h-[44px] file:rounded-md file:border-0",
-          "file:bg-primary file:px-4 file:py-2",
-          "file:text-base file:font-semibold file:text-primary-foreground",
+          "file:bg-accent file:px-4 file:py-2",
+          "file:text-base file:font-semibold file:text-on-accent",
           "disabled:opacity-60 disabled:cursor-not-allowed",
         ].join(" ")}
       />
 
       {processing ? (
-        <p role="status" aria-live="polite" className="text-base text-muted-foreground">
+        <p role="status" aria-live="polite" className="text-base text-muted">
           Processing photo…
         </p>
       ) : null}
@@ -211,10 +212,10 @@ export default function PhotoCapture({
         <p
           id={errorId}
           role="alert"
-          className="flex items-start gap-2 text-base text-alert"
+          className="flex items-start gap-2 text-base text-danger"
         >
           {/* Icon + text: meaning is never carried by color alone (Req 23.6). */}
-          <span aria-hidden="true">⚠</span>
+          <TriangleAlert aria-hidden="true" className="mt-0.5 h-5 w-5 shrink-0" />
           <span>{error}</span>
         </p>
       ) : null}
