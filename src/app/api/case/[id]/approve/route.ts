@@ -58,6 +58,18 @@ export async function POST(
   // Next 16: dynamic route params are a Promise and MUST be awaited.
   const { id } = await ctx.params;
 
+  // The approval screen may send the verbatim (possibly edited) draft text to
+  // persist alongside the status flip (Req 7.1). A missing/invalid body is fine.
+  let editedDraft: string | null = null;
+  try {
+    const body = (await request.json()) as { draft?: unknown };
+    if (typeof body?.draft === "string" && body.draft.trim().length > 0) {
+      editedDraft = body.draft;
+    }
+  } catch {
+    editedDraft = null;
+  }
+
   const householdId = await getCurrentHouseholdId();
   if (!householdId) {
     // No household cookie means we cannot own any case: treat as not found so
@@ -71,7 +83,11 @@ export async function POST(
     // matches no row and is reported as 404 (never another household's data).
     const update = await withTimeout(
       db('cases')
-        .update({ status: 'draft_ready' })
+        .update(
+          editedDraft !== null
+            ? { status: 'draft_ready', draft_text: editedDraft }
+            : { status: 'draft_ready' },
+        )
         .eq('id', id)
         .eq('household_id', householdId)
         .select('id, status')

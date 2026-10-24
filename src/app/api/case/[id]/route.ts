@@ -56,6 +56,7 @@ interface CaseRow {
   opened_at: string;
   clock_due_at: string | null;
   trace: TraceStep[] | null;
+  draft_text: string | null;
 }
 
 /** Shape returned to the browser for a case + its trace. No coordinates. */
@@ -69,6 +70,7 @@ interface CaseView {
   opened_at: string;
   clock_due_at: string | null;
   trace: TraceStep[];
+  draft_text: string | null;
 }
 
 export async function GET(
@@ -99,7 +101,7 @@ export async function GET(
   // row and returns 404 — it is never disclosed (Req 10.1).
   const { data, error } = await db("cases")
     .select(
-      "id, household_id, barrier_type, description, photo_path, lat, lng, route, status, city_case_id, opened_at, clock_due_at, trace",
+      "id, household_id, barrier_type, description, photo_path, lat, lng, route, status, city_case_id, opened_at, clock_due_at, trace, draft_text",
     )
     .eq("id", id)
     .eq("household_id", householdId)
@@ -126,6 +128,7 @@ export async function GET(
     opened_at: row.opened_at,
     clock_due_at: row.clock_due_at,
     trace: Array.isArray(row.trace) ? row.trace : [],
+    draft_text: row.draft_text ?? null,
   };
 
   // Defense in depth (Req 10.3, 10.4): strip any point-coordinate keys and any

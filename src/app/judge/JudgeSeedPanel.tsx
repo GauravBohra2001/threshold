@@ -1,6 +1,8 @@
 "use client";
 
 import Link from "next/link";
+
+import { maskPhone } from "@/lib/format/phone";
 import { useCallback, useEffect, useState } from "react";
 
 import LiveRegion from "@/components/LiveRegion";
@@ -110,7 +112,7 @@ export default function JudgeSeedPanel() {
                 key: "Caregiver demo number",
                 value: status.result.caregiver_number_missing
                   ? "Not configured. No call will be placed."
-                  : status.result.caregiver_phone,
+                  : maskPhone(status.result.caregiver_phone),
               },
               {
                 key: "Evidence photos",

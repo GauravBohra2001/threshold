@@ -1,5 +1,8 @@
+import { readFile } from "node:fs/promises";
+import path from "node:path";
+
 import { setHouseholdCookie } from "@/lib/auth/household";
-import { db } from "@/lib/data/supabase";
+import { db, uploadToVault } from "@/lib/data/supabase";
 import { logServerError } from "@/lib/log";
 
 /**
@@ -140,6 +143,22 @@ async function countVaultItems(householdId: string): Promise<number> {
   return count ?? 0;
 }
 
+
+/**
+ * If a demo image exists under public/<photo_path>, upload it to the vault
+ * bucket at that same path so the seeded vault items show a real photo. Missing
+ * files are skipped without failing the seed (Req 20: demo must not error).
+ */
+async function uploadDemoImageIfPresent(photoPath: string): Promise<void> {
+  try {
+    const abs = path.join(process.cwd(), "public", photoPath);
+    const bytes = await readFile(abs);
+    await uploadToVault(photoPath, bytes, "image/jpeg");
+  } catch {
+    // File not present (or unreadable) / already uploaded: skip silently.
+  }
+}
+
 export async function GET(): Promise<Response> {
   const caregiverPhone = readCaregiverDemoNumber();
 
@@ -225,6 +244,11 @@ export async function GET(): Promise<Response> {
     if (vaultError) {
       throw new Error("demo vault insert failed");
     }
+
+    // Best-effort: upload any demo images present under public/demo/maria/.
+    await Promise.all(
+      DEMO_VAULT_ITEMS.map((item) => uploadDemoImageIfPresent(item.photo_path)),
+    );
 
     await setHouseholdCookie(householdId);
 

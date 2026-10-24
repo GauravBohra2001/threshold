@@ -24,6 +24,8 @@ Open `/judge` on a phone. This loads a fictional demo household, Maria in Dorche
 
 The demo people are fictional and labeled as such, and every replay is labeled "Replay" on screen.
 
+Test photos: judges can open the sample photos at https://threshold-six-omega.vercel.app/demo/samples/blocked-sidewalk.jpg, https://threshold-six-omega.vercel.app/demo/samples/broken-sidewalk.jpg, and https://threshold-six-omega.vercel.app/demo/samples/missing-curb-ramp.jpg, save one, and report it as a barrier to see how the Case Agent routes each one differently.
+
 [SCREENSHOT: home screen on a phone]
 
 ## The problem

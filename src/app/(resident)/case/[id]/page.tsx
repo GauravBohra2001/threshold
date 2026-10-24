@@ -187,6 +187,7 @@ function CaseDetail({ params }: CasePageProps) {
   const [load, setLoad] = useState<LoadState>({ state: "loading" });
   const [approve, setApprove] = useState<ApproveState>({ state: "idle" });
   const [cityNumber, setCityNumber] = useState("");
+  const [editedDraft, setEditedDraft] = useState<string | null>(null);
   const [save, setSave] = useState<SaveState>({ state: "idle" });
   const [fieldError, setFieldError] = useState<string>("");
 
@@ -250,7 +251,11 @@ function CaseDetail({ params }: CasePageProps) {
     try {
       const response = await fetch(
         `/api/case/${encodeURIComponent(id)}/approve`,
-        { method: "POST", headers: { accept: "application/json" } },
+        {
+          method: "POST",
+          headers: { "content-type": "application/json", accept: "application/json" },
+          body: JSON.stringify({ draft: editedDraft ?? draftText ?? "" }),
+        },
       );
       if (!response.ok) {
         setApprove({ state: "error", message: APPROVE_ERROR_MESSAGE });
@@ -397,7 +402,19 @@ function CaseDetail({ params }: CasePageProps) {
               <FileText aria-hidden="true" className="h-5 w-5 shrink-0" />
               <span>Your draft</span>
             </h3>
-            <p className="mt-3 whitespace-pre-wrap text-ink">{draftText}</p>
+            <p className="mt-2 text-[16px] text-muted">
+              Read it over and edit anything before you approve. Nothing is sent
+              until you approve it.
+            </p>
+            <label htmlFor="draft-editor" className="sr-only">
+              Draft text
+            </label>
+            <textarea
+              id="draft-editor"
+              className="mt-3 min-h-[200px] w-full whitespace-pre-wrap rounded-[12px] border border-control-border bg-bg p-3 text-ink"
+              value={editedDraft ?? draftText ?? ""}
+              onChange={(event) => setEditedDraft(event.target.value)}
+            />
           </article>
 
           {approve.state === "error" ? (

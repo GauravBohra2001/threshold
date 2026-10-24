@@ -119,6 +119,8 @@ export interface ToolOutcome {
   route?: Route;
   /** A clock due date (ISO 8601) the tool set, surfaced on the case. */
   clockDueAt?: string;
+  /** The full draft text produced by draft_filing, persisted for approval. */
+  draftText?: string;
 }
 
 /** Immutable per-run context shared with every tool. */
@@ -181,6 +183,7 @@ export interface CasePersistence {
       status: CaseStatus;
       route: Route | null;
       clock_due_at: string | null;
+      draft_text: string | null;
     },
   ): Promise<void>;
 }
@@ -386,6 +389,7 @@ export function defaultTools(): ToolSpec[] {
           observation_summary: "Prepared a draft for the resident to review.",
           observation: r,
           route,
+          draftText: r.draft_text,
         };
       },
     },
@@ -573,6 +577,7 @@ const defaultPersist: CasePersistence = async (caseId, patch) => {
       status: patch.status,
       route: patch.route,
       clock_due_at: patch.clock_due_at,
+      draft_text: patch.draft_text,
     })
     .eq("id", caseId);
 };
@@ -636,6 +641,7 @@ async function recordStep(
   status: CaseStatus,
   route: Route | null,
   clockDueAt: string | null,
+  draftText: string | null,
   deps: RunDeps,
   caseId: string,
 ): Promise<TraceStep[]> {
@@ -645,6 +651,7 @@ async function recordStep(
     status,
     route,
     clock_due_at: clockDueAt,
+    draft_text: draftText,
   });
   return next;
 }
@@ -687,6 +694,7 @@ export async function runCaseAgent(
   let trace: TraceStep[] = [];
   let route: Route | null = null;
   let clockDueAt: string | null = null;
+  let draftText: string | null = null;
 
   const toolByName = new Map(tools.map((t) => [t.name, t]));
 
@@ -705,6 +713,7 @@ export async function runCaseAgent(
       "escalated",
       route,
       clockDueAt,
+      draftText,
       resolvedDeps,
       input.caseId,
     );
@@ -759,6 +768,7 @@ export async function runCaseAgent(
         "investigating",
         route,
         clockDueAt,
+        draftText,
         resolvedDeps,
         input.caseId,
       );
@@ -786,6 +796,7 @@ export async function runCaseAgent(
         "asked_user",
         route,
         clockDueAt,
+        draftText,
         resolvedDeps,
         input.caseId,
       );
@@ -818,6 +829,7 @@ export async function runCaseAgent(
         "investigating",
         route,
         clockDueAt,
+        draftText,
         resolvedDeps,
         input.caseId,
       );
@@ -856,15 +868,17 @@ export async function runCaseAgent(
         "investigating",
         route,
         clockDueAt,
+        draftText,
         resolvedDeps,
         input.caseId,
       );
       continue;
     }
 
-    // Apply any route / clock the tool decided on.
+    // Apply any route / clock / draft the tool decided on.
     if (outcome.route) route = outcome.route;
     if (outcome.clockDueAt) clockDueAt = outcome.clockDueAt;
+    if (outcome.draftText) draftText = outcome.draftText;
 
     const status: CaseStatus = spec.terminal ?? "investigating";
 
@@ -881,6 +895,7 @@ export async function runCaseAgent(
       status,
       route,
       clockDueAt,
+      draftText,
       resolvedDeps,
       input.caseId,
     );
@@ -913,6 +928,7 @@ export async function runCaseAgent(
     "escalated",
     route,
     clockDueAt,
+    draftText,
     resolvedDeps,
     input.caseId,
   );
