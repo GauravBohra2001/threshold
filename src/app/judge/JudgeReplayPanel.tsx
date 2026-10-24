@@ -8,6 +8,14 @@ import Badge from "@/components/ui/Badge";
 import Banner from "@/components/ui/Banner";
 import Button from "@/components/ui/Button";
 import SummaryList from "@/components/ui/SummaryList";
+import Panel from "@/components/ui/Panel";
+import {
+  ANSWER_HELP_LABEL,
+  ANSWER_YES_LABEL,
+  CHECKIN_QUESTION,
+  deriveCheckInView,
+  type CheckinResponse,
+} from "@/app/(resident)/home/checkin-view";
 
 /**
  * Judge Mode replay + fast-forward panel (ui-design.md, Req 20.5, 20.8, 20.9,
@@ -52,6 +60,8 @@ interface BlizzardFacts {
 interface BlizzardReplayResult {
   label: string;
   facts: BlizzardFacts;
+  alertId: string | null;
+  alertHeadline: string;
 }
 
 type BlizzardState =
@@ -99,7 +109,16 @@ function readBlizzard(body: unknown): BlizzardReplayResult | null {
   if (dates === null || snowfall === null || outages === null || source === null) {
     return null;
   }
-  return { label, facts: { dates, snowfall, outages, source } };
+  const alert =
+    typeof record.alert === "object" && record.alert !== null
+      ? (record.alert as Record<string, unknown>)
+      : {};
+  return {
+    label,
+    facts: { dates, snowfall, outages, source },
+    alertId: asString(alert.id),
+    alertHeadline: asString(alert.headline) ?? "February 2026 blizzard",
+  };
 }
 
 /**
@@ -153,11 +172,154 @@ async function errorMessage(res: Response): Promise<string> {
   return asString(body?.message) ?? GENERIC_ERROR;
 }
 
+
+/**
+ * The resident check-in panel + caregiver status, shown side by side for the
+ * replay demo. The resident sees "Are you okay?" with two answer buttons; a
+ * clearly labeled "Simulate no answer (demo)" advances the chain so the
+ * caregiver call is placed (a real Twilio call when ALLOW_LIVE_CALLS is true,
+ * otherwise the labeled simulated call). The caregiver column reflects the
+ * same check-in response.
+ */
+function CheckinChainDemo({
+  checkin,
+  busy,
+  error,
+  onAnswer,
+  onSimulateNoAnswer,
+}: {
+  checkin: CheckinResponse;
+  busy: boolean;
+  error: string;
+  onAnswer: () => void;
+  onSimulateNoAnswer: () => void;
+}) {
+  const view = deriveCheckInView(checkin);
+  const atStart = checkin.state === "SENT";
+
+  return (
+    <div className="mt-2 flex flex-col gap-6 lg:flex-row">
+      {/* Resident column */}
+      <section
+        aria-label="Maria, resident"
+        className="flex-1 rounded-[18px] border border-line bg-surface p-4"
+      >
+        <p className="text-[16px] font-bold text-muted">Maria, resident</p>
+        <LiveRegion politeness={view.politeness}>{view.announcement}</LiveRegion>
+        {atStart ? (
+          <>
+            <h3 className="mt-3 text-[22px]">{CHECKIN_QUESTION}</h3>
+            <div className="mt-4 flex flex-col gap-3">
+              <Button fullWidth variant="primary" loading={busy} loadingLabel="Sending" onClick={onAnswer}>
+                {ANSWER_YES_LABEL}
+              </Button>
+              <Button fullWidth variant="secondary" loading={busy} loadingLabel="Sending" onClick={onAnswer}>
+                {ANSWER_HELP_LABEL}
+              </Button>
+              <Button
+                fullWidth
+                variant="secondary"
+                loading={busy}
+                loadingLabel="Advancing"
+                onClick={onSimulateNoAnswer}
+              >
+                Simulate no answer (demo)
+              </Button>
+            </div>
+          </>
+        ) : (
+          <div className="mt-3">
+            <Panel title={view.heading}>
+              <p>{view.detail}</p>
+            </Panel>
+          </div>
+        )}
+        {error ? (
+          <Banner title="Check-in unavailable" alert>
+            {error}
+          </Banner>
+        ) : null}
+      </section>
+
+      {/* Caregiver column */}
+      <section
+        aria-label="Ana, caregiver"
+        className="flex-1 rounded-[18px] border border-line bg-surface p-4"
+      >
+        <p className="text-[16px] font-bold text-muted">Ana, caregiver</p>
+        <div className="mt-3 flex flex-col gap-3">
+          {checkin.simulated_call ? (
+            <Badge kind="simulated-call" />
+          ) : null}
+          <p className="text-[22px] font-bold text-ink">
+            {checkin.state === "ANSWERED"
+              ? "Maria checked in"
+              : checkin.state === "CALL_CAREGIVER"
+                ? "Maria hasn't answered. Calling you now."
+                : checkin.state === "ADVISE_911"
+                  ? "Call 911 if this is an emergency."
+                  : "Waiting for Maria to answer."}
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
 export default function JudgeReplayPanel() {
   const [blizzard, setBlizzard] = useState<BlizzardState>({ state: "idle" });
   const [fastForward, setFastForward] = useState<FastForwardState>({
     state: "idle",
   });
+
+  // Check-in chain state driven by the blizzard replay (task: wire the replay
+  // to the check-in chain). Starts null; becomes the latest /api/checkin view.
+  const [checkin, setCheckin] = useState<CheckinResponse | null>(null);
+  const [checkinBusy, setCheckinBusy] = useState(false);
+  const [checkinError, setCheckinError] = useState("");
+
+  const postCheckin = useCallback(
+    async (body: Record<string, unknown>) => {
+      setCheckinBusy(true);
+      setCheckinError("");
+      try {
+        const res = await fetch("/api/checkin", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) {
+          setCheckinError(await errorMessage(res));
+          return;
+        }
+        setCheckin((await res.json()) as CheckinResponse);
+      } catch {
+        setCheckinError(GENERIC_ERROR);
+      } finally {
+        setCheckinBusy(false);
+      }
+    },
+    [],
+  );
+
+  const startCheckin = useCallback(() => {
+    if (blizzard.state !== "ready") return;
+    const { alertId, alertHeadline } = blizzard.result;
+    void postCheckin({
+      alert_id: alertId ?? "blizzard-2026-02-22",
+      alert_headline: alertHeadline,
+      is_replay: true,
+    });
+  }, [blizzard, postCheckin]);
+
+  const simulateNoAnswer = useCallback(() => {
+    if (!checkin) return;
+    void postCheckin({
+      alert_id: checkin.alert_id,
+      is_replay: true,
+      event: "timeout",
+    });
+  }, [checkin, postCheckin]);
 
   const runBlizzard = useCallback(async () => {
     setBlizzard({ state: "loading" });
@@ -271,6 +433,33 @@ export default function JudgeReplayPanel() {
                 { key: "Source", value: blizzard.result.facts.source },
               ]}
             />
+
+            {/* Wire the replay to the deterministic check-in chain. */}
+            {checkin === null ? (
+              <Button
+                variant="primary"
+                fullWidth
+                loading={checkinBusy}
+                loadingLabel="Starting check-in"
+                onClick={startCheckin}
+              >
+                Start Maria&apos;s check-in
+              </Button>
+            ) : (
+              <CheckinChainDemo
+                checkin={checkin}
+                busy={checkinBusy}
+                error={checkinError}
+                onAnswer={() =>
+                  void postCheckin({
+                    alert_id: checkin.alert_id,
+                    is_replay: true,
+                    event: "resident_answered",
+                  })
+                }
+                onSimulateNoAnswer={simulateNoAnswer}
+              />
+            )}
           </div>
         ) : null}
       </div>
