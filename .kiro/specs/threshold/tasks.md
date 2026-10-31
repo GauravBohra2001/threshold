@@ -171,7 +171,7 @@ Wave 6 (eval suite, LAST in P2): task 18.1, then checkpoint 19.
     - **Validates: Requirements 21.7, 15.5, 16.6**
     - Vitest + fast-check, ≥100 iterations, tagged "Feature: threshold, Property 7: Forbidden wording"
 
-- [ ] 15. Implement report and case route handlers
+- [x] 15. Implement report and case route handlers
   - [x] 15.1 Implement `POST /api/report`
     - Validate photo and location present (else 400 naming the missing field, no case created); create case `investigating`; start `runCaseAgent`
     - _Requirements: 5.1, 5.2, 10.1, 22.3_
@@ -259,10 +259,42 @@ Wave 3 (remaining Judge Mode + fixtures): task 25.1, then checkpoint 26.
     - Blizzard replay button loads the fixture, shows "Replay" and only the three attributed facts (ran Feb 22–23 2026, nearly three feet of snow, outages peaked above 290,000, each attributed to the Mass.gov press release dated April 9, 2026); "Fast-forward 14 days (simulated)" calls `POST /api/judge/fast-forward` and shows "Simulated time"
     - _Requirements: 20.5, 20.8, 20.9, 20.10, 23.1_
 
-- [~] 26. Checkpoint — P3 build, tests, approval to commit
+- [x] 26. Checkpoint — P3 build, tests, approval to commit
   - Run `npm run build` and `npx vitest run`; fix any failures until both pass
   - Then ask the user for approval before committing/pushing: show the file list and a plain imperative commit message and wait for the user's "yes" (follow the git steering; do not commit or push without confirmation)
   - Ensure all tests pass, ask the user if questions arise.
+
+### Completed outside the original plan
+
+Work done during build that was not in the original plan. Recorded here for traceability.
+
+- [x] 36. Build the shared UI design system
+  - `src/components/ui/` Button, Badge, StatusChip, Skeleton, Banner, Panel, SummaryList, TaskList, ProcessTrace, applied across screens per the ui-design steering
+  - _Requirements: 23.1, 23.3, 23.5, 23.6_
+- [x] 37. Fix caregiver phone validation to accept E.164
+  - Validation `^\+?[0-9]{10,15}$` in `src/lib/rules/household-input.ts`; migration `20261024214010_fix_caregiver_phone_e164.sql`
+  - _Requirements: 2.2, 2.3_
+- [x] 38. Add the smoke script and server error logging
+  - `scripts/smoke.mjs` (`npm run smoke`); `src/lib/log.ts` `logServerError`, no stack traces shown to users
+  - _Requirements: 22.2, 22.3_
+- [x] 39. Add the home hub and back links
+  - `src/app/(resident)/home/HomeHub.tsx`, `src/components/BackLink.tsx`
+  - _Requirements: 23.1_
+- [x] 40. Mask caregiver phone numbers on screen
+  - `src/lib/format/phone.ts` `maskPhone` on Judge Mode and caregiver screens
+  - _Requirements: 10.1_
+- [x] 41. Persist the draft text verbatim and allow edits before approval
+  - `cases.draft_text` column via migration `20261024220000_add_cases_draft_text.sql`
+  - _Requirements: 7.1, 7.3_
+- [x] 42. Upload demo seed images and clean up test uploads
+  - `scripts/upload-demo-images.mjs` (one-time upload to the private `vault` bucket), `scripts/cleanup-demo-test-uploads.mjs`
+  - _Requirements: 20.1, 20.3_
+- [x] 43. Fix the Boston 311 nearby query
+  - `src/lib/data/boston311.ts`: cast text coordinates with `latitude::float8`, open filter `case_status <> 'Closed'`
+  - _Requirements: 6.1, 6.2, 6.4_
+- [x] 44. Wire the blizzard replay into the check-in chain
+  - Replay creates a check-in and drives the resident and caregiver screens, simulated call labeled
+  - _Requirements: 20.5, 11.1, 12.9_
 
 ### P4 — Aid Claim
 
@@ -273,33 +305,33 @@ Wave 1 (eligibility + claim routes): tasks 28.1, 29.1.
 Wave 2 (claim screen + Leominster replay fixture/screen): tasks 29.2, 30.1, then checkpoint 31.
 
 - [ ] 27. Implement the FEMA eligibility pure module (`src/lib/rules/fema-match.ts`)
-  - [~] 27.1 Implement `fema-match.ts`
+  - [ ] 27.1 Implement `fema-match.ts`
     - `isEligible(records)` returns true iff any matched record has `ihProgramDeclared === true` or `iaProgramDeclared === true`; matching by county FIPS, falling back to `placeCode` for tribal areas with no county code. No I/O.
     - _Requirements: 15.1, 15.2, 15.3, 15.4_
-  - [~] 27.2 Write property test for eligibility iff declared (required)
+  - [ ] 27.2 Write property test for eligibility iff declared (required)
     - **Property 2: Eligibility iff declared** — `isEligible(matched) === matched.some(r => r.ihProgramDeclared || r.iaProgramDeclared)`
     - **Validates: Requirements 21.2, 15.1, 15.2**
     - Vitest + fast-check, ≥100 iterations, tagged "Feature: threshold, Property 2: Eligibility iff declared"
 
 - [ ] 28. Implement the eligibility route
-  - [~] 28.1 Implement `POST /api/claim/eligibility`
+  - [ ] 28.1 Implement `POST /api/claim/eligibility`
     - Match household county (or tribal placeCode) against OpenFEMA via `openfema.ts` (10s); on match show "You may be eligible for FEMA help. FEMA makes the final decision." with disaster number and deadline guidance within 5s; no match → plain-language no-declaration message and no eligibility message; run all text through the `eligibility.ts` forbidden-wording guard; OpenFEMA timeout/error → friendly fallback retaining entered data (no stack trace)
     - _Requirements: 15.1, 15.2, 15.5, 15.6, 22.1, 22.2, 22.3_
 
 - [ ] 29. Implement the claim packet and Answer Sheet
-  - [~] 29.1 Implement `POST /api/claim`
+  - [ ] 29.1 Implement `POST /api/claim`
     - Build the packet including every vault item captured strictly before the incident date (exclude at/after); empty list → explicit "no pre-disaster evidence" note; flag ramps/grab bars/paved pathways in `accessibility_items` under the `fema-accessibility-repairs` right; produce the Answer Sheet in copy-ready text and read-aloud script formats; strip forbidden words from all claim/Answer Sheet text via `eligibility.ts`
     - _Requirements: 16.1, 16.2, 16.3, 16.4, 16.5, 16.6_
-  - [~] 29.2 Implement the claim screen
+  - [ ] 29.2 Implement the claim screen
     - `src/app/(resident)/claim/page.tsx` showing eligibility result, packet summary, accessibility items, and both Answer Sheet formats; ≥18px, honesty wording, "FEMA makes the decision"
     - _Requirements: 15.1, 16.5, 23.5_
 
 - [ ] 30. Implement the Leominster flood replay
-  - [~] 30.1 Create `fixtures/dr-4780.json` and wire the Leominster replay on `/judge`
+  - [ ] 30.1 Create `fixtures/dr-4780.json` and wire the Leominster replay on `/judge`
     - Load OpenFEMA records for disaster 4780 from `fixtures/dr-4780.json`; show "Replay", declaration date May 15, 2024, individual assistance for Bristol and Worcester counties; fixture load failure → "This replay is unavailable right now." leaving seeded data unchanged
     - _Requirements: 20.6, 20.7, 20.9, 20.10_
 
-- [~] 31. Checkpoint — P4 build, tests, approval to commit
+- [ ] 31. Checkpoint — P4 build, tests, approval to commit
   - Run `npm run build` and `npx vitest run`; fix any failures until both pass
   - Then ask the user for approval before committing/pushing: show the file list and a plain imperative commit message and wait for the user's "yes" (follow the git steering; do not commit or push without confirmation)
   - Ensure all tests pass, ask the user if questions arise.
@@ -338,6 +370,16 @@ Then checkpoint 35.
   - Then ask the user for approval before committing/pushing: show the file list and a plain imperative commit message and wait for the user's "yes" (follow the git steering; do not commit or push without confirmation)
   - Ensure all tests pass, ask the user if questions arise.
 
+### Follow-ups (optional)
+
+- [ ]* 45. Add a cases list screen and restore the "Your cases" hub link
+  - Resident or caregiver `cases` route listing the household's cases with status; then re-add the hub link
+  - _Requirements: 5.3, 8.4_
+- [ ]* 46. Add PDF document support to the Proof Vault (deferred)
+  - _Requirements: 3.5_
+- [ ]* 47. Give each browser its own Judge Mode demo household (deferred)
+  - _Requirements: 20.1, 20.3_
+
 ## Notes
 
 - Tasks marked with `*` are optional (Later-priority features and their checkpoint) and can be skipped for a faster MVP. The seven property-based tests and the agent evaluation suite are required and are NOT marked optional, even when they fall in P4.
@@ -371,7 +413,8 @@ Then checkpoint 35.
     { "id": 16, "tasks": ["27.2", "28.1", "29.1", "30.1"] },
     { "id": 17, "tasks": ["29.2"] },
     { "id": 18, "tasks": ["32.1", "33.1", "34.1"] },
-    { "id": 19, "tasks": ["32.2", "33.2"] }
+    { "id": 19, "tasks": ["32.2", "33.2"] },
+    { "id": 20, "tasks": ["45", "46", "47"] }
   ]
 }
 ```
